@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const path = require('path');
 const jwt = require('jsonwebtoken');
+const cookie = require('js-cookie');
 //airtable
 var Airtable = require('airtable');
 var base = new Airtable({ apiKey: 'key6g32DRULc2ELR4' }).base('appTIhrtdSQzoGMIf');
@@ -101,7 +102,7 @@ exports.postLogin = (req, res, next) => {
                                 loggedin: true
                             }, 'heyphil123');
                             console.log(token);
-                            res.cookie('jwttoken', token);
+                            res.cookie('jwttoken', token, { domain: "https://gentle-retreat-77560.herokuapp.com" });
                             res.redirect(mainurl + '/');
 
                         } else {
