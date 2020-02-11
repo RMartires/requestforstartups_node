@@ -63,6 +63,7 @@ exports.postSignup = (req, res, next) => {
             });
     } else {
         console.log("password does not match");
+        res.redirect(mainurl + '/signup');
     }
 
 };
@@ -105,6 +106,7 @@ exports.postLogin = (req, res, next) => {
 
                         } else {
                             console.log('wrong password');
+                            res.redirect(mainurl + '/login');
                         }
                     })
                     .catch(err => {
