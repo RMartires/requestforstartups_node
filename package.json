@@ -26,11 +26,7 @@
   "scripts": {
     "start": "node app.js",
     "start-dev": "concurrently --kill-others \"react-scripts start\" \"node node_app.js\"",
-    "build": "react-scripts build",
-    "test": "react-scripts test --env=jsdom",
-    "eject": "react-scripts eject",
-    "rename": "renamer --find App-clear.js --replace App.js ./src/App-clear.js && renamer --find style.css --replace index.css ./src/style.css ",
-    "remove-demo": "rimraf ./src/assets ./src/components ./src/pages ./src/Routes.js ./src/App.js ./src/index.css && npm run rename"
+    "build": "npm run app.js"
   },
   "devDependencies": {
     "concurrently": "^5.1.0",
