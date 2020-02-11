@@ -5,6 +5,8 @@ const jwt = require('jsonwebtoken');
 var Airtable = require('airtable');
 var base = new Airtable({ apiKey: 'key6g32DRULc2ELR4' }).base('appTIhrtdSQzoGMIf');
 
+const mainurl = 'https://cryptic-sea-72911.herokuapp.com';
+
 exports.postSignup = (req, res, next) => {
 
     const email = req.body.email;
@@ -30,7 +32,7 @@ exports.postSignup = (req, res, next) => {
                 if (exist) {
                     console.log('user alredy exists');
                     res.cookie('email_already_exits', true);
-                    res.redirect(process.env.signup);
+                    res.redirect(mainurl + '/signup');
                 } else {
                     bcrypt.hash(password, 12)
                         .then(hashedpassword => {
@@ -53,7 +55,7 @@ exports.postSignup = (req, res, next) => {
                         })
                         .then(rec => {
                             console.log('new user added');
-                            res.redirect(process.env.login);
+                            res.redirect(mainurl + '/');
                         });
                 }
             }, err => {
@@ -99,7 +101,7 @@ exports.postLogin = (req, res, next) => {
                             }, 'heyphil123');
                             console.log(token);
                             res.cookie('jwttoken', token);
-                            res.redirect(process.env.home);
+                            res.redirect(mainurl + '/');
 
                         } else {
                             console.log('wrong password');

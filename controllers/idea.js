@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 //airtable
 var Airtable = require('airtable');
 var base = new Airtable({ apiKey: 'key6g32DRULc2ELR4' }).base('appTIhrtdSQzoGMIf');
+const mainurl = 'https://cryptic-sea-72911.herokuapp.com';
 
 exports.Postidea = (req, res, next) => {
     const domain = req.body.domain;
@@ -13,11 +14,11 @@ exports.Postidea = (req, res, next) => {
         decodedtoken = jwt.verify(token, 'heyphil123');
     } catch (err) {
         //res.json({ messege: 'Login in to submit ideas' });
-        res.redirect(process.env.login);
+        res.redirect(mainurl + '/login');
     }
     if (!decodedtoken) {
         //res.json({ messege: 'Login in to submit ideas' });
-        res.redirect(process.env.login);
+        res.redirect(mainurl + '/login');
     } else {
         const email = decodedtoken.email;
         let toprecord;
@@ -49,7 +50,7 @@ exports.Postidea = (req, res, next) => {
                             console.log(err);
                         } else {
                             //console.log(results);
-                            res.redirect(process.env.home);
+                            res.redirect(mainurl + '/');
                         }
                     });
 
