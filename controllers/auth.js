@@ -102,7 +102,7 @@ exports.postLogin = (req, res, next) => {
                                 loggedin: true
                             }, 'heyphil123');
                             console.log(token);
-                            res.cookie('jwttoken', token, { domain: "https://gentle-retreat-77560.herokuapp.com" });
+                            res.cookie('jwttoken', token);
                             res.redirect(mainurl + '/');
 
                         } else {
