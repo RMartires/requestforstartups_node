@@ -102,8 +102,9 @@ exports.postLogin = (req, res, next) => {
                                 loggedin: true
                             }, 'heyphil123');
                             console.log(token);
-                            res.cookie('jwttoken', token);
-                            res.redirect(mainurl + '/');
+                            res.json({
+                                token: token
+                            });
 
                         } else {
                             console.log('wrong password');
