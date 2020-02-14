@@ -97,6 +97,47 @@ exports.getideas = (req, res, next) => {
 
 };
 
+exports.getmyideas = (req, res, next) => {
+    var email = req.params.email;
+    var ideaidlist;
+    var idealist = [];
+    base('users').select({
+        fields: ["ideas", "Email"],
+        view: "Grid view",
+    }).eachPage((records, fetchNextPage) => {
+
+        records.forEach((record) => {
+            var { fields } = record;
+            if (fields.Email === email) {
+                var { ideas } = fields;
+                ideaidlist = ideas;
+            }
+        });
+
+        fetchNextPage();
+
+    }, (err) => {
+        if (err) { console.error(err); return; }
+        res.json({
+            ideaidlist: ideaidlist
+        });
+
+    });
+
+};
+
+exports.getidea = (req, res, next) => {
+    const id = req.params.ideaid;
+    base('ideas').find(id, function (err, record) {
+        if (err) { console.error(err); return; }
+        var { fields } = record;
+        console.log(fields);
+        res.json({
+            idea: fields
+        });
+    });
+};
+
 exports.getuser = (req, res, next) => {
     var userid = req.params.userid;
     base('users').find(userid, (err, record) => {
