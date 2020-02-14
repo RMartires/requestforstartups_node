@@ -12,4 +12,8 @@ router.get('/getusers/:userid', ideacontoler.getuser);
 
 router.get('/idea/upvote/:ideaid', ideacontoler.putupvote);
 
+router.get('/idea/getmyideas/:email', ideacontoler.getmyideas);
+
+router.get('/idea/getidea/:ideaid', ideacontoler.getidea);
+
 module.exports = router;
