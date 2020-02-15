@@ -16,11 +16,13 @@
     "js-cookies": "^1.0.4",
     "jsonwebtoken": "^8.5.1",
     "mdbreact": "4.24.0",
+    "multer": "^1.4.2",
     "react": "^16.9.0",
     "react-cookie": "^4.0.3",
     "react-dom": "^16.9.0",
     "react-router-dom": "^5.1.2",
     "react-scripts": "3.0.1",
+    "twitter": "^1.7.1",
     "universal-cookie": "^4.0.3"
   },
   "scripts": {
