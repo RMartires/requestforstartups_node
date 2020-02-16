@@ -8,7 +8,7 @@ router.post('/addidea', ideacontoler.Postidea);
 
 router.get('/', ideacontoler.getideas);
 
-router.get('/idea/upvote/:ideaid', ideacontoler.putupvote);
+router.post('/idea/upvote/:ideaid', ideacontoler.putupvote);
 
 router.get('/idea/getmyideas/:email', ideacontoler.getmyideas);
 

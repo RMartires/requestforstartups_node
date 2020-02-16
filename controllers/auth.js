@@ -15,7 +15,8 @@ exports.postSignup = (req, res, next) => {
     const confirmpassword = req.body.confirmpassword;
     const username = req.body.name;
 
-    console.log(password + ' ' + confirmpassword);
+    var topuserid;
+    //console.log(password + ' ' + confirmpassword);
 
     if (password === confirmpassword) {
         var exist = false;
@@ -48,25 +49,24 @@ exports.postSignup = (req, res, next) => {
                                     "ideas": [],
                                     "comments": []
                                 }
-                            }], (record, err) => {
-                                if (record) {
-                                    console.log(record);
-                                    return record;
+                            }], (err, records) => {
+                                if (records) {
+                                    var { id } = records[0];
+                                    topuserid = id;
+                                    console.log(topuserid);
+                                    const token = jwt.sign({
+                                        email: email,
+                                        loggedin: true,
+                                        userid: topuserid
+                                    }, 'heyphil123');
+                                    res.json({
+                                        message: 'done',
+                                        token: token
+                                    });
                                 } else {
                                     console.log(err);
                                 }
                             })
-                        })
-                        .then(rec => {
-                            console.log('new user added');
-                            const token = jwt.sign({
-                                email: email,
-                                loggedin: true
-                            }, 'heyphil123');
-                            res.json({
-                                message: 'done',
-                                token: token
-                            });
                         });
                 }
             }, err => {
@@ -86,6 +86,7 @@ exports.postLogin = (req, res, next) => {
     const password = req.body.password;
     var exist = false;
     var topPassword;
+    var userid;
 
     base('users').select({
         fields: ["Email", "Password"],
@@ -100,6 +101,7 @@ exports.postLogin = (req, res, next) => {
                 if (Email === email) {
                     exist = true;
                     topPassword = Password;
+                    userid = record.id;
                     console.log(Password);
                 }
             });
@@ -111,7 +113,8 @@ exports.postLogin = (req, res, next) => {
                             console.log('loggedin');
                             const token = jwt.sign({
                                 email: email,
-                                loggedin: true
+                                loggedin: true,
+                                userid: userid
                             }, 'heyphil123');
                             console.log(token);
                             res.json({

@@ -141,39 +141,54 @@ exports.getidea = (req, res, next) => {
 
 exports.putupvote = (req, res, next) => {
     const ideaId = req.params.ideaid;
+    const userid = req.body.userid;
+
+    var alreadyupvoted = false;
     var currentupvote = 0;
-    console.log(ideaId);
+    //console.log(ideaId);
     base('ideas')
         .find(ideaId, (err, record) => {
             if (err) { console.error(err); return; }
             else {
-                currentupvote = record.fields.upvote;
-                currentupvote = currentupvote + 1;
+                var { fields } = record;
+                var { whoupvote } = fields;
+                whoupvote = whoupvote || [];
+                whoupvote.forEach(uid => {
+                    if (uid === userid) {
+                        alreadyupvoted = true;
+                    }
+                })
+                if (!alreadyupvoted) {
+                    whoupvote.push(userid);
+                    currentupvote = record.fields.upvote;
+                    currentupvote = currentupvote + 1;
 
-                base('ideas').update([
-                    {
-                        "id": ideaId,
-                        "fields": {
-                            "upvote": currentupvote
-                        }
-                    }], (err, record) => {
-                        if (err) {
-                            console.error(err);
-                            return;
-                        } else {
-                            var { fields } = record[0];
-                            var parsedrecord = {
-                                id: ideaId,
-                                data: fields
-                            };
-                            res.json({
-                                messege: 'sent',
-                                record: parsedrecord,
-                                link: '/'
-                            });
+                    base('ideas').update([
+                        {
+                            "id": ideaId,
+                            "fields": {
+                                "upvote": currentupvote,
+                                "whoupvote": whoupvote
+                            }
+                        }], (err, record) => {
+                            if (err) {
+                                console.error(err);
+                                return;
+                            } else {
+                                var { fields } = record[0];
+                                var parsedrecord = {
+                                    id: ideaId,
+                                    data: fields
+                                };
+                                res.json({
+                                    messege: 'sent',
+                                    record: parsedrecord,
+                                    link: '/'
+                                });
 
-                        }
-                    });
+                            }
+                        });
+                }
 
             }
         });
