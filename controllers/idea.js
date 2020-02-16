@@ -2,12 +2,15 @@ const jwt = require('jsonwebtoken');
 //airtable
 var Airtable = require('airtable');
 var base = new Airtable({ apiKey: 'key6g32DRULc2ELR4' }).base('appTIhrtdSQzoGMIf');
+//const mainurl = 'http://localhost:3000';
 const mainurl = 'https://cryptic-sea-72911.herokuapp.com';
 
 exports.Postidea = (req, res, next) => {
     const domain = req.body.domain;
     const problem = req.body.problem;
     const token = req.body.jwttoken;
+
+    var date = new Date();
 
     var decodedtoken;
     try {
@@ -43,7 +46,8 @@ exports.Postidea = (req, res, next) => {
                             "user": [toprecord.id],
                             "Domain": domain,
                             "Problem": problem,
-                            "upvote": 0
+                            "upvote": 0,
+                            "date": date
                         }
                     }], (err, results) => {
                         if (err) {
@@ -72,7 +76,6 @@ exports.getideas = (req, res, next) => {
         records.forEach((record) => {
             var { fields } = record;
             var { id } = record;
-
             var parsedrecord = {
                 id: id,
                 data: fields
@@ -137,19 +140,6 @@ exports.getidea = (req, res, next) => {
         });
     });
 };
-
-exports.getuser = (req, res, next) => {
-    var userid = req.params.userid;
-    base('users').find(userid, (err, record) => {
-        if (err) { console.error(err); return; }
-        var email = record.fields.Email;
-        res.json({
-            email: email
-        });
-    });
-
-};
-
 
 exports.putupvote = (req, res, next) => {
     const ideaId = req.params.ideaid;

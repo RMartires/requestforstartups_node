@@ -6,6 +6,7 @@ const cookie = require('js-cookie');
 var Airtable = require('airtable');
 var base = new Airtable({ apiKey: 'key6g32DRULc2ELR4' }).base('appTIhrtdSQzoGMIf');
 
+//const mainurl = 'http://localhost:3000';
 const mainurl = 'https://cryptic-sea-72911.herokuapp.com';
 
 exports.postSignup = (req, res, next) => {
