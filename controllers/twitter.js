@@ -3,10 +3,10 @@ var base = require('../database/airtable');
 
 exports.gettweets = (req, res, next) => {
     var client = new Twitter({
-        consumer_key: '2UEKwIijR55ZTyG7t6ccxfCVn',
-        consumer_secret: 'kzTOcsI4KRSfQTeaCwYFPsccXcRoU0xNmN33cqYgwv3j7KV9an',
-        access_token_key: '1228590283207499776-al87B7IiYwnPfzoB8xVb3RvLINha3E',
-        access_token_secret: 'C2gAWmB0nrVzSALQmuS1TBdxGNzdRVAdEY7rvKijar3wF'
+        consumer_key: process.env.consumer_secret,
+        consumer_secret: process.env.consumer_secret,
+        access_token_key: process.env.access_token_key,
+        access_token_secret: process.env.access_token_secret
     });
 
     var stream = client.stream('statuses/filter', { track: '@startuprequest' });

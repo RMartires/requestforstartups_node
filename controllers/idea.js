@@ -12,7 +12,7 @@ exports.Postidea = (req, res, next) => {
 
     var decodedtoken;
     try {
-        decodedtoken = jwt.verify(token, 'heyphil123');
+        decodedtoken = jwt.verify(token, process.env.secret);
     } catch (err) {
         //res.json({ messege: 'Login in to submit ideas' });
         res.redirect(mainurl + '/login');

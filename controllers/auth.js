@@ -61,7 +61,7 @@ exports.postSignup = (req, res, next) => {
                             const token = jwt.sign({
                                 email: email,
                                 loggedin: true
-                            }, 'heyphil123');
+                            }, process.env.secret);
                             res.json({
                                 message: 'done',
                                 token: token
@@ -111,7 +111,7 @@ exports.postLogin = (req, res, next) => {
                             const token = jwt.sign({
                                 email: email,
                                 loggedin: true
-                            }, 'heyphil123');
+                            }, process.env.secret);
                             console.log(token);
                             res.json({
                                 message: 'done',
