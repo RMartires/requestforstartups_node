@@ -1,9 +1,7 @@
 const Twitter = require('twitter');
-var Airtable = require('airtable');
-var base = new Airtable({ apiKey: 'key6g32DRULc2ELR4' }).base('appTIhrtdSQzoGMIf');
+var base = require('../database/airtable');
 
 exports.gettweets = (req, res, next) => {
-
     var client = new Twitter({
         consumer_key: '2UEKwIijR55ZTyG7t6ccxfCVn',
         consumer_secret: 'kzTOcsI4KRSfQTeaCwYFPsccXcRoU0xNmN33cqYgwv3j7KV9an',
@@ -16,6 +14,8 @@ exports.gettweets = (req, res, next) => {
         if (error) {
             console.log(errror);
         }
+        console.log('listening for tweets');
+        console.log(event.text);
 
         var { id } = event;
         var { text } = event;

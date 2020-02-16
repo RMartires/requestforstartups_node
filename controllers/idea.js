@@ -1,9 +1,7 @@
 const jwt = require('jsonwebtoken');
 //airtable
-var Airtable = require('airtable');
-var base = new Airtable({ apiKey: 'key6g32DRULc2ELR4' }).base('appTIhrtdSQzoGMIf');
-//const mainurl = 'http://localhost:3000';
-const mainurl = 'https://cryptic-sea-72911.herokuapp.com';
+var base = require('../database/airtable');
+const mainurl = require('../database/links');
 
 exports.Postidea = (req, res, next) => {
     const domain = req.body.domain;

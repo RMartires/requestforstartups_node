@@ -32,6 +32,8 @@ app.use(authRoute);
 app.use(ideaRoute);
 app.use(commRoute);
 app.use(tweetRoute);
+
+
 //port 5000
 app.listen(process.env.PORT || 5000);
 

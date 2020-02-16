@@ -3,20 +3,20 @@ const path = require('path');
 const jwt = require('jsonwebtoken');
 const cookie = require('js-cookie');
 //airtable
-var Airtable = require('airtable');
-var base = new Airtable({ apiKey: 'key6g32DRULc2ELR4' }).base('appTIhrtdSQzoGMIf');
 
-//const mainurl = 'http://localhost:3000';
-const mainurl = 'https://cryptic-sea-72911.herokuapp.com';
+var base = require('../database/airtable');
+const mainurl = require('../database/links');
 
 exports.postSignup = (req, res, next) => {
 
     const email = req.body.email;
     const password = req.body.password;
-    const confirmpassword = req.body.confirmPassword;
-    const username = req.body.username;
+    const confirmpassword = req.body.confirmpassword;
+    const username = req.body.name;
 
-    if (password == confirmpassword) {
+    console.log(password + ' ' + confirmpassword);
+
+    if (password === confirmpassword) {
         var exist = false;
         base('users').select({
             fields: ["Email"],
@@ -32,9 +32,10 @@ exports.postSignup = (req, res, next) => {
                     }
                 });
                 if (exist) {
-                    console.log('user alredy exists');
-                    res.cookie('email_already_exits', true);
-                    res.redirect(mainurl + '/signup');
+                    //console.log('user alredy exists');
+                    res.json({
+                        message: 'email exists'
+                    });
                 } else {
                     bcrypt.hash(password, 12)
                         .then(hashedpassword => {
@@ -57,15 +58,24 @@ exports.postSignup = (req, res, next) => {
                         })
                         .then(rec => {
                             console.log('new user added');
-                            res.redirect(mainurl + '/');
+                            const token = jwt.sign({
+                                email: email,
+                                loggedin: true
+                            }, 'heyphil123');
+                            res.json({
+                                message: 'done',
+                                token: token
+                            });
                         });
                 }
             }, err => {
                 console.log(err);
             });
     } else {
-        console.log("password does not match");
-        res.redirect(mainurl + '/signup');
+        //console.log("password does not match");
+        res.json({
+            message: 'password did not match'
+        });
     }
 
 };
@@ -104,12 +114,14 @@ exports.postLogin = (req, res, next) => {
                             }, 'heyphil123');
                             console.log(token);
                             res.json({
+                                message: 'done',
                                 token: token
                             });
 
                         } else {
-                            console.log('wrong password');
-                            res.redirect(mainurl + '/login');
+                            res.json({
+                                message: 'wrong password'
+                            });
                         }
                     })
                     .catch(err => {
