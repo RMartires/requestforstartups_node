@@ -134,7 +134,8 @@ exports.getidea = (req, res, next) => {
         var { fields } = record;
         console.log(fields);
         res.json({
-            idea: fields
+            idea: fields,
+            id: record.id
         });
     });
 };

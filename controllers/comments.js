@@ -10,6 +10,7 @@ exports.getcommments = (req, res, next) => {
         var { commentslu } = fields;
         var { commentsuserslu } = fields;
         res.json({
+            fields: fields,
             comments: commentslu,
             users: commentsuserslu
         });
