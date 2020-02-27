@@ -37,20 +37,20 @@ app.use(commRoute);
 //app.use(tweetRoute);
 
 
-var client = new Twitter({
-    consumer_key: process.env.consumer_key,
-    consumer_secret: process.env.consumer_secret,
-    access_token_key: process.env.access_token_key,
-    access_token_secret: process.env.access_token_secret
-});
-var stream = client.stream('statuses/filter', { track: '@startuprequest' });
-stream.on('data', function (event, error) {
-    if (error) {
-        console.log(errror);
-    }
-    //console.log(event.text);
-    twittercontroller.addtweets(event);
-});
+// var client = new Twitter({
+//     consumer_key: process.env.consumer_key,
+//     consumer_secret: process.env.consumer_secret,
+//     access_token_key: process.env.access_token_key,
+//     access_token_secret: process.env.access_token_secret
+// });
+// var stream = client.stream('statuses/filter', { track: '@startuprequest' });
+// stream.on('data', function (event, error) {
+//     if (error) {
+//         console.log(errror);
+//     }
+//     //console.log(event.text);
+//     twittercontroller.addtweets(event);
+// });
 
 
 //port 5000
