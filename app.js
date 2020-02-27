@@ -1,7 +1,8 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const multer = require('multer');
-const Twitter = require('twitter');
+
+var passport = require('passport'), TwitterTokenStrategy = require('passport-twitter');
 
 const twittercontroller = require('./controllers/twitter');
 
@@ -12,7 +13,10 @@ const app = express();
 const authRoute = require('./routes/auth');
 const ideaRoute = require('./routes/idea');
 const commRoute = require('./routes/comments');
-//const tweetRoute = require('./routes/twitter');
+const tweetRoute = require('./routes/twitter-auth');
+
+
+
 
 app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -34,23 +38,20 @@ app.use(multer().none());
 app.use(authRoute);
 app.use(ideaRoute);
 app.use(commRoute);
-//app.use(tweetRoute);
+app.use(tweetRoute);
 
+// passport.use(new TwitterTokenStrategy({
+//     consumerKey: '2UEKwIijR55ZTyG7t6ccxfCVn',
+//     consumerSecret: 'kzTOcsI4KRSfQTeaCwYFPsccXcRoU0xNmN33cqYgwv3j7KV9an',
+//     callbackURL: "http://localhost:5000/auth/twitter/"
+// },
+//     function (token, tokenSecret, profile, done) {
+//         console.log(profile);
+//         done(null, profile);
+//     }
 
-var client = new Twitter({
-    consumer_key: '2UEKwIijR55ZTyG7t6ccxfCVn',
-    consumer_secret: 'kzTOcsI4KRSfQTeaCwYFPsccXcRoU0xNmN33cqYgwv3j7KV9an',
-    access_token_key: '1228590283207499776-CMWZjHRQ83nS6EjoOlBmrsQzo3dwN9',
-    access_token_secret: '9xjAqcFpAds672m585jGmRQ1ADltKs5b43GjS57228za5'
-});
-var stream = client.stream('statuses/filter', { track: '@startuprequest' });
-stream.on('data', function (event, error) {
-    if (error) {
-        console.log(errror);
-    }
-    //console.log(event.text);
-    twittercontroller.addtweets(event);
-});
+// ));
+
 
 
 //port 5000
