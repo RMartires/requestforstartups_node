@@ -21,19 +21,19 @@ exports.Postidea = (req, res, next) => {
         //res.json({ messege: 'Login in to submit ideas' });
         res.redirect(mainurl + '/login');
     } else {
-        const email = decodedtoken.email;
+        const name = decodedtoken.Name;
         let toprecord;
 
         base('users').select({
-            fields: ["Email"],
+            fields: ["Name"],
             cellFormat: "json",
             view: "Grid view"
         })
             .eachPage((records) => {
                 records.map(record => {
                     var { fields } = record;
-                    var { Email } = fields;
-                    if (Email === email) {
+                    var { Name } = fields;
+                    if (Name === name) {
                         exist = true;
                         toprecord = record;
                     }

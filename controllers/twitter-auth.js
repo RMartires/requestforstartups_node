@@ -1,5 +1,7 @@
 const request = require('request');
 var Twit = require('twit');
+var base = require('../database/airtable');
+
 
 exports.getrequesttoken = (req, res, next) => {
     request.post({
@@ -43,60 +45,83 @@ exports.Oauthcb = (req, res, next) => {
         }
 
         var temp = body.split('&');
-        userinfo.oauth_token = temp[0].split('=')[1];
-        userinfo.oauth_token_secret = temp[1].split('=')[1];
-        userinfo.user_id = temp[2].split('=')[1];
-        userinfo.screen_name = temp[3].split('=')[1];
+        if (temp) {
+            userinfo.oauth_token = temp[0].split('=')[1];
+            userinfo.oauth_token_secret = temp[1].split('=')[1];
+            userinfo.user_id = temp[2].split('=')[1];
+            userinfo.screen_name = temp[3].split('=')[1];
 
-        console.log(userinfo);
+            var users = [];
 
-        var T = new Twit({
-            consumer_key: '2UEKwIijR55ZTyG7t6ccxfCVn',
-            consumer_secret: 'kzTOcsI4KRSfQTeaCwYFPsccXcRoU0xNmN33cqYgwv3j7KV9an',
-            access_token: userinfo.oauth_token,
-            access_token_secret: userinfo.oauth_token_secret,
-            timeout_ms: 60 * 1000,  // optional HTTP request timeout to apply to all requests.
-            strictSSL: true,     // optional - requires SSL certificates to be valid.
-        });
+            base('users').select({
+                view: "Grid view"
+            }).eachPage(function page(records, fetchNextPage) {
 
-        T.get('account/verify_credentials', { skip_status: true })
-            .catch(function (err) {
-                console.log('caught error', err.stack)
-            })
-            .then(function (result) {
-                var { profile_image_url } = result.data;
-                console.log(profile_image_url);
-            });
+                records.forEach(function (record) {
+                    users.push(record.get('User_id'));
+                });
+
+                fetchNextPage();
+
+            }, function done(err) {
+                if (err) { console.error(err); return; }
+                if (users.includes(userinfo.user_id)) {
+                    res.json({ message: 'user exists' });
+
+                } else {
+
+                    //user does not exist so we create a new one
+                    var T = new Twit({
+                        consumer_key: '2UEKwIijR55ZTyG7t6ccxfCVn',
+                        consumer_secret: 'kzTOcsI4KRSfQTeaCwYFPsccXcRoU0xNmN33cqYgwv3j7KV9an',
+                        access_token: userinfo.oauth_token,
+                        access_token_secret: userinfo.oauth_token_secret,
+                        timeout_ms: 60 * 1000,  // optional HTTP request timeout to apply to all requests.
+                        strictSSL: true,     // optional - requires SSL certificates to be valid.
+                    });
+
+                    T.get('account/verify_credentials', { skip_status: true })
+                        .catch(function (err) {
+                            console.log('caught error', err.stack)
+                        })
+                        .then(function (result) {
+                            var { profile_image_url } = result.data;
+                            userinfo.profile_image_url = profile_image_url;
+
+                            base('users').create([
+                                {
+                                    "fields": {
+                                        "Name": userinfo.screen_name,
+                                        "User_id": userinfo.user_id,
+                                        "Pic": userinfo.profile_image_url
+                                    }
+                                }], function (err, records) {
+                                    if (err) {
+                                        console.error(err);
+                                        return;
+                                    }
+                                    res.json({ message: 'new user created' });
+
+                                });
+
+                        });
+
+                }//end of the else block to create a new user
+
+            });//end of the find users func
 
 
+
+
+
+        } else {
+            //not loggedin
+            res.json({ message: 'twitter login error' });
+        }
 
     });
 
 
 };
 
-exports.getuser = (req, res, next) => {
-    passport.authenticate('twitter-token', { session: false }), function (req, res, next) {
-        if (!req.user) {
-            return res.send(401, 'User Not Authenticated');
-        }
 
-        // prepare token for API
-        req.auth = {
-            id: req.user.id
-        };
-
-        return next();
-    };
-
-};
-
-exports.generateToken = (req, res, next) => {
-    req.token = createToken(req.auth);
-    return next();
-};
-
-exports.sendToken = (req, res, next) => {
-    res.setHeader('x-auth-token', req.token);
-    return res.status(200).send(JSON.stringify(req.user));
-};
