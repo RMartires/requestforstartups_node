@@ -170,7 +170,7 @@ exports.putupvote = (req, res, next) => {
 
 exports.getfilteredideas = (req, res, next) => {
     const domain = req.params.domain;
-    console.log(domain);
+    //console.log(domain);
     var ideas = [];
 
     base('ideas').select({
