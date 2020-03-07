@@ -10,7 +10,9 @@ router.get('/', ideacontoler.getideas);
 
 router.post('/idea/upvote/:ideaid', ideacontoler.putupvote);
 
-router.get('/idea/getmyideas/:email', ideacontoler.getmyideas);
+router.get('/idea/filterideas/:domain', ideacontoler.getfilteredideas);
+
+router.get('/idea/orderideas/:type', ideacontoler.getorderideas);
 
 router.get('/idea/getidea/:ideaid', ideacontoler.getidea);
 

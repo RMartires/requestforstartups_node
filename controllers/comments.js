@@ -18,7 +18,7 @@ exports.getcommments = (req, res, next) => {
 };
 
 exports.postcomments = (req, res, next) => {
-    const email = req.body.email;
+    const name = req.body.name;
     const comment = req.body.comment;
     const ideaid = req.params.ideaid;
     var recordid;
@@ -28,8 +28,8 @@ exports.postcomments = (req, res, next) => {
     }).eachPage((records, fetchNextPage) => {
 
         records.forEach((record) => {
-            var currentemail = record.get('Email');
-            if (email === currentemail) {
+            var currentname = record.get('Name');
+            if (name === currentname) {
                 recordid = record.id;
             }
         });

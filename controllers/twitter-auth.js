@@ -1,6 +1,10 @@
 const request = require('request');
 var Twit = require('twit');
 var base = require('../database/airtable');
+const jwt = require('jsonwebtoken');
+const Cookies = require('js-cookie');
+
+const mainurl = require('../database/links');
 
 
 exports.getrequesttoken = (req, res, next) => {
@@ -17,7 +21,7 @@ exports.getrequesttoken = (req, res, next) => {
         }
 
 
-        var jsonStr = body.split('=');;
+        var jsonStr = body.split('=');
         var oauth_token = jsonStr[1].split('&')[0];
         var oauth_token_secret = jsonStr[2].split('&')[0];
         var oauth_callback_confirmed = jsonStr[3];
@@ -33,7 +37,7 @@ exports.Oauthcb = (req, res, next) => {
     var oauth_token = req.query.oauth_token;
     var oauth_verifier = req.query.oauth_verifier;
     var url = 'https://api.twitter.com/oauth/access_token?' + 'oauth_token=' + oauth_token + '&oauth_verifier=' + oauth_verifier;
-
+    var token;
 
     var userinfo = {};
 
@@ -52,13 +56,18 @@ exports.Oauthcb = (req, res, next) => {
             userinfo.screen_name = temp[3].split('=')[1];
 
             var users = [];
+            var rec;
 
             base('users').select({
                 view: "Grid view"
             }).eachPage(function page(records, fetchNextPage) {
 
                 records.forEach(function (record) {
-                    users.push(record.get('User_id'));
+                    if (record.get('User_id') === userinfo.user_id) {
+                        users.push(record.get('User_id'));
+                        rec = record;
+                    }
+
                 });
 
                 fetchNextPage();
@@ -66,7 +75,16 @@ exports.Oauthcb = (req, res, next) => {
             }, function done(err) {
                 if (err) { console.error(err); return; }
                 if (users.includes(userinfo.user_id)) {
-                    res.json({ message: 'user exists' });
+                    const token = jwt.sign({
+                        user: userinfo,
+                        record_id: rec.id
+                    }, 'heyphil123');
+                    // res.json({
+                    //     message: 'user exists',
+                    //     token: token,
+                    //     path: '/'
+                    // });
+                    res.redirect(mainurl + '/login/' + token);
 
                 } else {
 
@@ -100,7 +118,17 @@ exports.Oauthcb = (req, res, next) => {
                                         console.error(err);
                                         return;
                                     }
-                                    res.json({ message: 'new user created' });
+                                    const token = jwt.sign({
+                                        user: userinfo,
+                                        record_id: records[0].id
+                                    }, 'heyphil123');
+                                    // res.json({
+                                    //     message: 'new user created',
+                                    //     token: token,
+                                    //     path: '/'
+                                    // });
+                                    res.redirect(mainurl + '/login/' + token);
+
 
                                 });
 
@@ -116,7 +144,11 @@ exports.Oauthcb = (req, res, next) => {
 
         } else {
             //not loggedin
-            res.json({ message: 'twitter login error' });
+            // res.json({
+            //     message: 'twitter login error',
+            //     path: '/login'
+            // });
+            res.redirect(mainurl + '/login/' + token);
         }
 
     });
