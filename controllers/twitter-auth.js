@@ -11,7 +11,7 @@ exports.getrequesttoken = (req, res, next) => {
     request.post({
         url: 'https://api.twitter.com/oauth/request_token',
         oauth: {
-            oauth_callback: "http://localhost:5000/auth/twitter/cb/",
+            oauth_callback: mainurl + "/auth/twitter/cb/",
             consumer_key: process.env.consumer_key,
             consumer_secret: process.env.consumer_secret
         }
