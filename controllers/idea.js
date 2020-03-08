@@ -21,19 +21,19 @@ exports.Postidea = (req, res, next) => {
         //res.json({ messege: 'Login in to submit ideas' });
         res.redirect(mainurl + '/login');
     } else {
-        const email = decodedtoken.email;
+        const name = decodedtoken.user.screen_name;
         let toprecord;
 
         base('users').select({
-            fields: ["Email"],
+            fields: ["Name"],
             cellFormat: "json",
             view: "Grid view"
         })
             .eachPage((records) => {
                 records.map(record => {
                     var { fields } = record;
-                    var { Email } = fields;
-                    if (Email === email) {
+                    var { Name } = fields;
+                    if (Name === name) {
                         exist = true;
                         toprecord = record;
                     }
@@ -98,34 +98,6 @@ exports.getideas = (req, res, next) => {
 
 };
 
-exports.getmyideas = (req, res, next) => {
-    var email = req.params.email;
-    var ideaidlist;
-    var idealist = [];
-    base('users').select({
-        fields: ["ideas", "Email"],
-        view: "Grid view",
-    }).eachPage((records, fetchNextPage) => {
-
-        records.forEach((record) => {
-            var { fields } = record;
-            if (fields.Email === email) {
-                var { ideas } = fields;
-                ideaidlist = ideas;
-            }
-        });
-
-        fetchNextPage();
-
-    }, (err) => {
-        if (err) { console.error(err); return; }
-        res.json({
-            ideaidlist: ideaidlist
-        });
-
-    });
-
-};
 
 exports.getidea = (req, res, next) => {
     const id = req.params.ideaid;
@@ -193,5 +165,73 @@ exports.putupvote = (req, res, next) => {
 
             }
         });
+
+};
+
+exports.getfilteredideas = (req, res, next) => {
+    const domain = req.params.domain;
+    //console.log(domain);
+    var ideas = [];
+
+    base('ideas').select({
+        view: "Grid view"
+    }).eachPage(function page(records, fetchNextPage) {
+
+        records.forEach(function (record) {
+            var recorddom = record.get('Domain');
+            if (recorddom === domain) {
+                var { fields } = record;
+                var { id } = record;
+                var parsedrecord = {
+                    id: id,
+                    data: fields
+                }
+                ideas.push(parsedrecord);
+            }
+        });
+
+        fetchNextPage();
+
+    }, function done(err) {
+        if (err) { console.error(err); return; }
+        res.json({ recordlist: ideas });
+    });
+
+};
+
+
+
+exports.getorderideas = (req, res, next) => {
+    const type = req.params.type;
+    if (type === 'TRENDING') {
+        var args = [{ field: "trending", direction: "desc" }];
+    } else if (type === 'TOP') {
+        var args = [{ field: "upvote", direction: "desc" }];
+    } else {
+        var args = [{ field: "date", direction: "desc" }];
+    }
+    var ideas = [];
+
+    base('ideas').select({
+        view: "Grid view",
+        sort: args
+    }).eachPage(function page(records, fetchNextPage) {
+
+        records.forEach(function (record) {
+            var { fields } = record;
+            var { id } = record;
+            var parsedrecord = {
+                id: id,
+                data: fields
+            }
+            ideas.push(parsedrecord);
+        });
+
+        fetchNextPage();
+
+    }, function done(err) {
+        if (err) { console.error(err); return; }
+        res.json({ recordlist: ideas });
+    });
 
 };
