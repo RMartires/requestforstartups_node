@@ -66,6 +66,7 @@ exports.Oauthcb = (req, res, next) => {
                     if (record.get('User_id') === userinfo.user_id) {
                         users.push(record.get('User_id'));
                         rec = record;
+                        userinfo.profile_image_url = record.get('Pic');
                     }
 
                 });
