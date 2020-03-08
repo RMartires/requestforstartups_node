@@ -104,7 +104,9 @@ exports.Oauthcb = (req, res, next) => {
                         })
                         .then(function (result) {
                             var { profile_image_url } = result.data;
-                            userinfo.profile_image_url = profile_image_url;
+                            var temp_profile = profile_image_url;
+                            var temp_image = temp_profile.split('_normal')[0] + temp_profile.split('_normal')[1];
+                            userinfo.profile_image_url = temp_image;
 
                             base('users').create([
                                 {
