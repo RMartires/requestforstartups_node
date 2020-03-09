@@ -16,10 +16,12 @@ exports.Postidea = (req, res, next) => {
     } catch (err) {
         //res.json({ messege: 'Login in to submit ideas' });
         res.redirect(mainurl + '/login');
+        console.log(decodedtoken + 'catch');
     }
     if (!decodedtoken) {
         //res.json({ messege: 'Login in to submit ideas' });
         res.redirect(mainurl + '/login');
+        console.log(decodedtoken + 'if');
     } else {
         const name = decodedtoken.user.screen_name;
         let toprecord;
