@@ -15,13 +15,14 @@ exports.Postidea = (req, res, next) => {
         decodedtoken = jwt.verify(token, process.env.secret);
     } catch (err) {
         //res.json({ messege: 'Login in to submit ideas' });
-        res.redirect(mainurl + '/login');
         console.log(decodedtoken + 'catch');
+        res.redirect(mainurl + '/login');
+
     }
     if (!decodedtoken) {
         //res.json({ messege: 'Login in to submit ideas' });
-        res.redirect(mainurl + '/login');
         console.log(decodedtoken + 'if');
+        res.redirect(mainurl + '/login');
     } else {
         const name = decodedtoken.user.screen_name;
         let toprecord;
