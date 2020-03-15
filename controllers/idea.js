@@ -1,5 +1,6 @@
 const User = require('../models/users');
 const Idea = require('../models/ideas');
+const Comment = require('../models/comments');
 
 const jwt = require('jsonwebtoken');
 //airtable
@@ -34,21 +35,12 @@ exports.Postidea = (req, res, next) => {
                 Idea.create({
                     problem: problem,
                     domain: domain,
-                    upvote: 0
+                    upvote: 0,
+                    createdBy: tempuser.dataValues.id,
+                    trending: 0
                 })
                     .then(idea => {
-                        console.log(idea);
-                        tempuser.getIdeas()
-                            .then(oldideas => {
-                                var newideas = oldideas.concat(idea);
-                                tempuser.setIdeas(newideas)
-                                    .then(result => {
-                                        //console.log(result); added new idea
-                                        res.redirect(mainurl + '/');
-                                    });
-
-                            })
-
+                        res.redirect(mainurl + '/');
                     });
 
             });
@@ -66,7 +58,7 @@ exports.getideas = (req, res, next) => {
             //console.log(ideas);
             res.json({
                 messege: 'sent',
-                recordlist: ideas
+                ideas: ideas
             });
         });
 
@@ -90,22 +82,35 @@ exports.putupvote = (req, res, next) => {
     const ideaId = req.params.ideaid;
     const userid = req.body.userid;
     //console.log(ideaId)
-    Idea.findAll({ where: { id: ideaId } })
-        .then(ideas => {
-            var idea = ideas[0];
-            if (idea.whoUpvote.includes(userid)) {
-                //already upvoted so remmove
-                idea.upvote = idea.upvote - 1;
-            } else {
-                //inc upvote count
-                idea.upvote = idea.upvote + 1;
-            }
-            return idea.save();
-        })
+    var upvts, trending;
+    Idea.findByPk(ideaId)
         .then(idea => {
-            res.json({
-                updatedidea: idea
-            });
+            idea.getUpvoters({ where: { id: userid } })//returns an empty arr if u did not upvote else arr.len=1
+                .then(upvoters => {
+                    if (upvoters.length === 1) {
+                        idea.upvote = idea.upvote - 1;
+                        upvts = idea.upvote;
+                        idea.removeUpvoter(userid);
+                        //idea.save();
+                    } else {
+                        idea.upvote = idea.upvote + 1;
+                        upvts = idea.upvote;
+                        idea.addUpvoter(userid);
+                        //idea.save();
+                    }
+                    return idea.save();
+
+                }).then(idea => {
+                    idea.getComments()
+                        .then(comments => {
+                            trending = upvts + comments.length;
+                            idea.trending = trending;
+                            idea.save();
+
+                        });
+
+                });
+
         });
 
 };
@@ -125,34 +130,18 @@ exports.getfilteredideas = (req, res, next) => {
 exports.getorderideas = (req, res, next) => {
     const type = req.params.type;
     if (type === 'TRENDING') {
-        var args = [{ field: "trending", direction: "desc" }];
+        var args = "trending";
     } else if (type === 'TOP') {
-        var args = [{ field: "upvote", direction: "desc" }];
+        var args = "upvote";
     } else {
-        var args = [{ field: "date", direction: "desc" }];
+        var args = "createdAt";
     }
-    var ideas = [];
 
-    base('ideas').select({
-        view: "Grid view",
-        sort: args
-    }).eachPage(function page(records, fetchNextPage) {
-
-        records.forEach(function (record) {
-            var { fields } = record;
-            var { id } = record;
-            var parsedrecord = {
-                id: id,
-                data: fields
-            }
-            ideas.push(parsedrecord);
+    Idea.findAll({ order: [[args, 'DESC']] })
+        .then(ideas => {
+            res.json({
+                ideas: ideas
+            });
         });
-
-        fetchNextPage();
-
-    }, function done(err) {
-        if (err) { console.error(err); return; }
-        res.json({ recordlist: ideas });
-    });
 
 };

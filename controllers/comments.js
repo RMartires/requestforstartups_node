@@ -1,71 +1,56 @@
+var Comment = require('../models/comments');
+var Idea = require('../models/ideas');
 //airtable
 var base = require('../database/airtable');
 const mainurl = require('../database/links');
 
 exports.getcommments = (req, res, next) => {
     const id = req.params.ideaid;
-    base('ideas').find(id, (err, record) => {
-        if (err) { console.error(err); return; }
-        var { fields } = record;
-        var { commentslu } = fields;
-        var { commentsuserslu } = fields;
-        var { commentsuserpiclu } = fields;
-        res.json({
-            fields: fields,
-            comments: commentslu,
-            users: commentsuserslu,
-            userspic: commentsuserpiclu
+    Idea.findByPk(id)
+        .then(idea => {
+            idea.getComments()
+                .then(comments => {
+                    res.json({
+                        comments: comments
+                    });
+                });
+
         });
-    });
+
 };
 
 exports.postcomments = (req, res, next) => {
-    const name = req.body.name;
+    const userid = req.body.userid;
     const comment = req.body.comment;
     const ideaid = req.params.ideaid;
-    var recordid;
 
-    base('users').select({
-        view: "Grid view"
-    }).eachPage((records, fetchNextPage) => {
+    var mainidea;
 
-        records.forEach((record) => {
-            var currentname = record.get('Name');
-            if (name === currentname) {
-                recordid = record.id;
-            }
+    Comment.create({
+        commentText: comment,
+        createdBy: userid
+    })
+        .then(comment => {
+            Idea.findByPk(ideaid)
+                .then(idea => {
+                    mainidea = idea;
+                    return idea.addComment(comment.dataValues.id);
+
+                })
+                .then(() => {
+                    return mainidea.getComments();
+                })
+                .then(comments => {
+                    mainidea.trending = mainidea.upvote + comments.length;
+                    mainidea.save()
+                        .then(() => {
+                            res.json({
+                                comments: comments
+                            });
+                        });
+
+                });
+
         });
-
-        fetchNextPage();
-
-    }, (err) => {
-        if (err) { console.error(err); return; }
-        addcoment(recordid);
-    });
-
-    const addcoment = (user) => {
-        base('comments').create([
-            {
-                "fields": {
-                    "comment": comment,
-                    "idea": [
-                        ideaid
-                    ],
-                    "user": [
-                        user
-                    ]
-                }
-            }
-        ], function (err, record) {
-            if (err) {
-                console.error(err);
-                return;
-            }
-            res.json({
-                messege: 'done'
-            });
-        });
-
-    }
 
 };

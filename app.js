@@ -41,11 +41,11 @@ app.use(tweetRoute);
 
 //setting up relatons
 Idea.belongsTo(User, { foreignKey: 'createdBy' });
-Idea.belongsToMany(User, { through: 'whoUpvoted' });
-Comment.belongsTo(User, { foreignKey: 'createdBy' });
-Idea.belongsToMany(Comment, { through: 'commentedOn' });
+Idea.belongsToMany(User, { as: 'Upvoters', through: 'whoUpvoted' });
+Comment.belongsTo(User, { as: 'Commenters', foreignKey: 'createdBy' });
+Idea.belongsToMany(Comment, { as: 'Comments', through: 'commentedOn' });
 
-sequelize.sync({ force: true })
+sequelize.sync()//{ force: true })
     .then(res => {
         //port 5000
         app.listen(process.env.PORT || 5000);
