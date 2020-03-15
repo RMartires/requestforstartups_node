@@ -4,6 +4,8 @@ var base = require('../database/airtable');
 const jwt = require('jsonwebtoken');
 const Cookies = require('js-cookie');
 
+const User = require('../models/users');
+
 const mainurl = require('../database/links');
 
 
@@ -58,92 +60,68 @@ exports.Oauthcb = (req, res, next) => {
             var users = [];
             var rec;
 
-            base('users').select({
-                view: "Grid view"
-            }).eachPage(function page(records, fetchNextPage) {
+            User.findAll({ where: { name: userinfo.screen_name } })
+                .then(users => {
+                    if (users.length === 0) {
+                        //no user so we create one
+                        var T = new Twit({
+                            consumer_key: '2UEKwIijR55ZTyG7t6ccxfCVn',
+                            consumer_secret: 'kzTOcsI4KRSfQTeaCwYFPsccXcRoU0xNmN33cqYgwv3j7KV9an',
+                            access_token: userinfo.oauth_token,
+                            access_token_secret: userinfo.oauth_token_secret,
+                            timeout_ms: 60 * 1000,  // optional HTTP request timeout to apply to all requests.
+                            strictSSL: true,     // optional - requires SSL certificates to be valid.
+                        });
 
-                records.forEach(function (record) {
-                    if (record.get('User_id') === userinfo.user_id) {
-                        users.push(record.get('User_id'));
-                        rec = record;
-                        userinfo.profile_image_url = record.get('Pic');
+                        T.get('account/verify_credentials', { skip_status: true })
+                            .catch(function (err) {
+                                console.log('caught error', err.stack)
+                            })
+                            .then(function (result) {
+                                var { profile_image_url } = result.data;
+                                var temp_profile = profile_image_url;
+                                var temp_image = temp_profile.split('_normal')[0] + temp_profile.split('_normal')[1];
+                                userinfo.profile_image_url = temp_image;
+
+                                User.create({
+                                    name: userinfo.screen_name,
+                                    twitterId: userinfo.user_id,
+                                    profilePicture: userinfo.profile_image_url
+                                })
+                                    .then(user => {
+                                        var { dataValues } = user;
+                                        console.log('new user created');
+                                        const token = jwt.sign({
+                                            user: userinfo,
+                                            record_id: dataValues.id
+                                        }, 'heyphil123');
+                                        // res.json({
+                                        //     message: 'new user created',
+                                        //     token: token,
+                                        //     path: '/'
+                                        // });
+                                        res.redirect(mainurl + '/login/' + token);
+
+                                    });
+
+                            });
+
+                    } else {
+                        const tempuser = users[0];
+                        var { dataValues } = tempuser;
+                        const token = jwt.sign({
+                            user: userinfo,
+                            record_id: dataValues.id
+                        }, 'heyphil123');
+                        // res.json({
+                        //     message: 'user exists',
+                        //     token: token,
+                        //     path: '/'
+                        // });
+                        res.redirect(mainurl + '/login/' + token);
                     }
 
                 });
-
-                fetchNextPage();
-
-            }, function done(err) {
-                if (err) { console.error(err); return; }
-                if (users.includes(userinfo.user_id)) {
-                    const token = jwt.sign({
-                        user: userinfo,
-                        record_id: rec.id
-                    }, 'heyphil123');
-                    // res.json({
-                    //     message: 'user exists',
-                    //     token: token,
-                    //     path: '/'
-                    // });
-                    res.redirect(mainurl + '/login/' + token);
-
-                } else {
-
-                    //user does not exist so we create a new one
-                    var T = new Twit({
-                        consumer_key: '2UEKwIijR55ZTyG7t6ccxfCVn',
-                        consumer_secret: 'kzTOcsI4KRSfQTeaCwYFPsccXcRoU0xNmN33cqYgwv3j7KV9an',
-                        access_token: userinfo.oauth_token,
-                        access_token_secret: userinfo.oauth_token_secret,
-                        timeout_ms: 60 * 1000,  // optional HTTP request timeout to apply to all requests.
-                        strictSSL: true,     // optional - requires SSL certificates to be valid.
-                    });
-
-                    T.get('account/verify_credentials', { skip_status: true })
-                        .catch(function (err) {
-                            console.log('caught error', err.stack)
-                        })
-                        .then(function (result) {
-                            var { profile_image_url } = result.data;
-                            var temp_profile = profile_image_url;
-                            var temp_image = temp_profile.split('_normal')[0] + temp_profile.split('_normal')[1];
-                            userinfo.profile_image_url = temp_image;
-
-                            base('users').create([
-                                {
-                                    "fields": {
-                                        "Name": userinfo.screen_name,
-                                        "User_id": userinfo.user_id,
-                                        "Pic": userinfo.profile_image_url
-                                    }
-                                }], function (err, records) {
-                                    if (err) {
-                                        console.error(err);
-                                        return;
-                                    }
-                                    const token = jwt.sign({
-                                        user: userinfo,
-                                        record_id: records[0].id
-                                    }, 'heyphil123');
-                                    // res.json({
-                                    //     message: 'new user created',
-                                    //     token: token,
-                                    //     path: '/'
-                                    // });
-                                    res.redirect(mainurl + '/login/' + token);
-
-
-                                });
-
-                        });
-
-                }//end of the else block to create a new user
-
-            });//end of the find users func
-
-
-
-
 
         } else {
             //not loggedin
@@ -151,7 +129,7 @@ exports.Oauthcb = (req, res, next) => {
             //     message: 'twitter login error',
             //     path: '/login'
             // });
-            res.redirect(mainurl + '/login/' + token);
+            res.redirect(mainurl + '/login/');
         }
 
     });

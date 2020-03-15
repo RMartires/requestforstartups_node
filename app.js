@@ -1,6 +1,13 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const multer = require('multer');
+//
+//sql-stuff
+const sequelize = require('./database/sql');
+//sql-models
+const User = require('./models/users');
+const Idea = require('./models/ideas');
+const Comment = require('./models/comments');
 
 const app = express();
 
@@ -32,7 +39,15 @@ app.use(ideaRoute);
 app.use(commRoute);
 app.use(tweetRoute);
 
+//setting up relatons
+Idea.belongsTo(User, { foreignKey: 'createdBy' });
+Idea.belongsToMany(User, { through: 'whoUpvoted' });
+Comment.belongsTo(User, { foreignKey: 'createdBy' });
+Idea.belongsToMany(Comment, { through: 'commentedOn' });
 
-//port 5000
-app.listen(process.env.PORT || 5000);
+sequelize.sync({ force: true })
+    .then(res => {
+        //port 5000
+        app.listen(process.env.PORT || 5000);
+    });
 
