@@ -53,7 +53,13 @@ exports.Postidea = (req, res, next) => {
 
 exports.getideas = (req, res, next) => {
     //var recordlist = [];
-    Idea.findAll()
+    Idea.findAll({
+
+        order: [['createdAt', 'DESC']],
+        include: [{
+            model: User
+        }]
+    })
         .then(ideas => {
             //console.log(ideas);
             res.json({
@@ -106,7 +112,22 @@ exports.putupvote = (req, res, next) => {
                             trending = upvts + comments.length;
                             idea.trending = trending;
                             idea.save();
-
+                            return true;
+                        })
+                        .then(() => {
+                            Idea.findAll({
+                                order: [['createdAt', 'DESC']],
+                                include: [{
+                                    model: User
+                                }]
+                            })
+                                .then(ideas => {
+                                    //console.log(ideas);
+                                    res.json({
+                                        messege: 'sent',
+                                        ideas: ideas
+                                    });
+                                });
                         });
 
                 });
@@ -118,9 +139,16 @@ exports.putupvote = (req, res, next) => {
 exports.getfilteredideas = (req, res, next) => {
     const domain = req.params.domain;
     //console.log(domain);
-    Idea.findAll({ where: { domain: domain } })
+    Idea.findAll(
+        {
+            where: { domain: domain },
+            include: [{
+                model: User
+            }]
+        }
+    )
         .then(ideas => {
-            res.json({ recordlist: ideas });
+            res.json({ ideas: ideas });
         });
 
 };
@@ -137,7 +165,14 @@ exports.getorderideas = (req, res, next) => {
         var args = "createdAt";
     }
 
-    Idea.findAll({ order: [[args, 'DESC']] })
+    Idea.findAll(
+        {
+            order: [[args, 'DESC']],
+            include: [{
+                model: User
+            }]
+        }
+    )
         .then(ideas => {
             res.json({
                 ideas: ideas

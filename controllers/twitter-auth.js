@@ -109,6 +109,7 @@ exports.Oauthcb = (req, res, next) => {
                     } else {
                         const tempuser = users[0];
                         var { dataValues } = tempuser;
+                        userinfo.profile_image_url = dataValues.profilePicture;
                         const token = jwt.sign({
                             user: userinfo,
                             record_id: dataValues.id
