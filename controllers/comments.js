@@ -7,14 +7,10 @@ const mainurl = require('../database/links');
 
 exports.getcommments = (req, res, next) => {
     const id = req.params.ideaid;
-    var mainuser;
-    Idea.findByPk(id)
+    Idea.findByPk(id, {
+        include: User
+    })
         .then((idea) => {
-            User.findByPk(idea.createdBy)
-                .then(user => {
-                    mainuser = user;
-                    return idea;
-                });
             return idea;
         })
         .then(idea => {
@@ -27,7 +23,7 @@ exports.getcommments = (req, res, next) => {
                 .then(comments => {
                     res.json({
                         idea: idea,
-                        user: mainuser,
+                        user: idea.user,
                         comments: comments
                     });
                 });
@@ -55,7 +51,9 @@ exports.postcomments = (req, res, next) => {
 
                 })
                 .then(() => {
-                    return mainidea.getComments();
+                    return mainidea.getComments({
+                        include: ['Commenters']
+                    });
                 })
                 .then(comments => {
                     mainidea.trending = mainidea.upvote + comments.length;
