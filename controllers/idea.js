@@ -1,3 +1,7 @@
+const User = require('../models/users');
+const Idea = require('../models/ideas');
+const Comment = require('../models/comments');
+
 const jwt = require('jsonwebtoken');
 //airtable
 var base = require('../database/airtable');
@@ -25,79 +29,45 @@ exports.Postidea = (req, res, next) => {
         res.redirect(mainurl + '/login');
     } else {
         const name = decodedtoken.user.screen_name;
-        let toprecord;
 
-        base('users').select({
-            fields: ["Name"],
-            cellFormat: "json",
-            view: "Grid view"
-        })
-            .eachPage((records) => {
-                records.map(record => {
-                    var { fields } = record;
-                    var { Name } = fields;
-                    if (Name === name) {
-                        exist = true;
-                        toprecord = record;
-                    }
-                });
-                if (exist) {
-                    base('ideas').create([{
-                        "fields": {
-                            "user": [toprecord.id],
-                            "Domain": domain,
-                            "Problem": problem,
-                            "upvote": 0,
-                            "date": date
-                        }
-                    }], (err, results) => {
-                        if (err) {
-                            console.log(err);
-                        } else {
-                            //console.log(results);
-                            res.redirect(mainurl + '/');
-                        }
+        User.findAll({ where: { name: name } })
+            .then(users => {
+                const tempuser = users[0];
+                Idea.create({
+                    problem: problem,
+                    domain: domain,
+                    upvote: 0,
+                    createdBy: tempuser.dataValues.id,
+                    trending: 0
+                })
+                    .then(idea => {
+                        res.redirect(mainurl + '/');
                     });
 
-                }
-            }, err => {
-                console.log(err);
             });
+
+
     }
 
 
 };
 
 exports.getideas = (req, res, next) => {
-    var recordlist = [];
-    base('ideas').select({
-        view: "Grid view"
-    }).eachPage((records, fetchNextPage) => {
+    //var recordlist = [];
+    Idea.findAll({
 
-        records.forEach((record) => {
-            var { fields } = record;
-            var { id } = record;
-            var parsedrecord = {
-                id: id,
-                data: fields
-            }
-            recordlist.push(parsedrecord);
-        });
-
-        fetchNextPage();
-
-    }, (err) => {
-        if (err) {
-            console.error(err);
-            return;
-        } else {
-            //console.log(recordlist);
+        order: [['createdAt', 'DESC']],
+        include: [{
+            model: User
+        }]
+    })
+        .then(ideas => {
+            //console.log(ideas);
             res.json({
                 messege: 'sent',
-                recordlist: recordlist
+                ideas: ideas
             });
-        }
-    });
+        });
 
 };
 
@@ -118,55 +88,51 @@ exports.getidea = (req, res, next) => {
 exports.putupvote = (req, res, next) => {
     const ideaId = req.params.ideaid;
     const userid = req.body.userid;
-
-    var alreadyupvoted = false;
-    var currentupvote = 0;
-    //console.log(ideaId);
-    base('ideas')
-        .find(ideaId, (err, record) => {
-            if (err) { console.error(err); return; }
-            else {
-                var { fields } = record;
-                var { whoupvote } = fields;
-                whoupvote = whoupvote || [];
-                whoupvote.forEach(uid => {
-                    if (uid === userid) {
-                        alreadyupvoted = true;
+    //console.log(ideaId)
+    var upvts, trending;
+    Idea.findByPk(ideaId)
+        .then(idea => {
+            idea.getUpvoters({ where: { id: userid } })//returns an empty arr if u did not upvote else arr.len=1
+                .then(upvoters => {
+                    if (upvoters.length === 1) {
+                        idea.upvote = idea.upvote - 1;
+                        upvts = idea.upvote;
+                        idea.removeUpvoter(userid);
+                        //idea.save();
+                    } else {
+                        idea.upvote = idea.upvote + 1;
+                        upvts = idea.upvote;
+                        idea.addUpvoter(userid);
+                        //idea.save();
                     }
-                })
-                if (!alreadyupvoted) {
-                    whoupvote.push(userid);
-                    currentupvote = record.fields.upvote;
-                    currentupvote = currentupvote + 1;
+                    return idea.save();
 
-                    base('ideas').update([
-                        {
-                            "id": ideaId,
-                            "fields": {
-                                "upvote": currentupvote,
-                                "whoupvote": whoupvote
-                            }
-                        }], (err, record) => {
-                            if (err) {
-                                console.error(err);
-                                return;
-                            } else {
-                                var { fields } = record[0];
-                                var parsedrecord = {
-                                    id: ideaId,
-                                    data: fields
-                                };
-                                res.json({
-                                    messege: 'sent',
-                                    record: parsedrecord,
-                                    link: '/'
+                }).then(idea => {
+                    idea.getComments()
+                        .then(comments => {
+                            trending = upvts + comments.length;
+                            idea.trending = trending;
+                            idea.save();
+                            return true;
+                        })
+                        .then(() => {
+                            Idea.findAll({
+                                order: [['createdAt', 'DESC']],
+                                include: [{
+                                    model: User
+                                }]
+                            })
+                                .then(ideas => {
+                                    //console.log(ideas);
+                                    res.json({
+                                        messege: 'sent',
+                                        ideas: ideas
+                                    });
                                 });
-
-                            }
                         });
-                }
 
-            }
+                });
+
         });
 
 };
@@ -174,31 +140,17 @@ exports.putupvote = (req, res, next) => {
 exports.getfilteredideas = (req, res, next) => {
     const domain = req.params.domain;
     //console.log(domain);
-    var ideas = [];
-
-    base('ideas').select({
-        view: "Grid view"
-    }).eachPage(function page(records, fetchNextPage) {
-
-        records.forEach(function (record) {
-            var recorddom = record.get('Domain');
-            if (recorddom === domain) {
-                var { fields } = record;
-                var { id } = record;
-                var parsedrecord = {
-                    id: id,
-                    data: fields
-                }
-                ideas.push(parsedrecord);
-            }
+    Idea.findAll(
+        {
+            where: { domain: domain },
+            include: [{
+                model: User
+            }]
+        }
+    )
+        .then(ideas => {
+            res.json({ ideas: ideas });
         });
-
-        fetchNextPage();
-
-    }, function done(err) {
-        if (err) { console.error(err); return; }
-        res.json({ recordlist: ideas });
-    });
 
 };
 
@@ -207,34 +159,25 @@ exports.getfilteredideas = (req, res, next) => {
 exports.getorderideas = (req, res, next) => {
     const type = req.params.type;
     if (type === 'TRENDING') {
-        var args = [{ field: "trending", direction: "desc" }];
+        var args = "trending";
     } else if (type === 'TOP') {
-        var args = [{ field: "upvote", direction: "desc" }];
+        var args = "upvote";
     } else {
-        var args = [{ field: "date", direction: "desc" }];
+        var args = "createdAt";
     }
-    var ideas = [];
 
-    base('ideas').select({
-        view: "Grid view",
-        sort: args
-    }).eachPage(function page(records, fetchNextPage) {
-
-        records.forEach(function (record) {
-            var { fields } = record;
-            var { id } = record;
-            var parsedrecord = {
-                id: id,
-                data: fields
-            }
-            ideas.push(parsedrecord);
+    Idea.findAll(
+        {
+            order: [[args, 'DESC']],
+            include: [{
+                model: User
+            }]
+        }
+    )
+        .then(ideas => {
+            res.json({
+                ideas: ideas
+            });
         });
-
-        fetchNextPage();
-
-    }, function done(err) {
-        if (err) { console.error(err); return; }
-        res.json({ recordlist: ideas });
-    });
 
 };
