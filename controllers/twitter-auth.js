@@ -100,7 +100,7 @@ exports.Oauthcb = (req, res, next) => {
                                         //     token: token,
                                         //     path: '/'
                                         // });
-                                        res.redirect(mainurl + '/login/' + token);
+                                        res.redirect('http://localhost:3000' + '/login/' + token);
 
                                     });
 
