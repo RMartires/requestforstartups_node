@@ -59,6 +59,9 @@ exports.getideas = (req, res, next) => {
         order: [['createdAt', 'DESC']],
         include: [{
             model: User
+        }, {
+            model: User,
+            as: 'Upvoters'
         }]
     })
         .then(ideas => {
@@ -120,13 +123,17 @@ exports.putupvote = (req, res, next) => {
                                 order: [['createdAt', 'DESC']],
                                 include: [{
                                     model: User
+                                }, {
+                                    model: User,
+                                    as: 'Upvoters'
                                 }]
                             })
                                 .then(ideas => {
                                     //console.log(ideas);
                                     res.json({
                                         messege: 'sent',
-                                        ideas: ideas
+                                        ideas: ideas,
+                                        idea: idea
                                     });
                                 });
                         });
@@ -145,6 +152,9 @@ exports.getfilteredideas = (req, res, next) => {
             where: { domain: domain },
             include: [{
                 model: User
+            }, {
+                model: User,
+                as: 'Upvoters'
             }]
         }
     )
@@ -171,6 +181,9 @@ exports.getorderideas = (req, res, next) => {
             order: [[args, 'DESC']],
             include: [{
                 model: User
+            }, {
+                model: User,
+                as: 'Upvoters'
             }]
         }
     )
