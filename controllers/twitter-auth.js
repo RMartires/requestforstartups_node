@@ -91,15 +91,17 @@ exports.Oauthcb = (req, res, next) => {
                                     .then(user => {
                                         var { dataValues } = user;
                                         console.log('new user created');
-                                        const token = jwt.sign({
-                                            user: userinfo,
-                                            record_id: dataValues.id
-                                        }, 'heyphil123');
+                                        // const token = jwt.sign({
+                                        //     user: userinfo,
+                                        //     record_id: dataValues.id
+                                        // }, 'heyphil123');
                                         // res.json({
                                         //     message: 'new user created',
                                         //     token: token,
                                         //     path: '/'
                                         // });
+                                        var tokennum = (dataValues.id * 2) + 8945;
+                                        var token = `RX${tokennum}`;
                                         res.redirect(mainurl + '/login/' + token);
 
                                     });
@@ -109,16 +111,13 @@ exports.Oauthcb = (req, res, next) => {
                     } else {
                         const tempuser = users[0];
                         var { dataValues } = tempuser;
-                        userinfo.profile_image_url = dataValues.profilePicture;
-                        const token = jwt.sign({
-                            user: userinfo,
-                            record_id: dataValues.id
-                        }, 'heyphil123');
-                        // res.json({
-                        //     message: 'user exists',
-                        //     token: token,
-                        //     path: '/'
-                        // });
+                        // const token = jwt.sign({
+                        //     user: userinfo,
+                        //     record_id: dataValues.id
+                        // }, 'heyphil123');
+
+                        var tokennum = (dataValues.id * 2) + 8945;
+                        var token = `RX${tokennum}`;
                         res.redirect(mainurl + '/login/' + token);
                     }
 
@@ -138,4 +137,31 @@ exports.Oauthcb = (req, res, next) => {
 
 };
 
+exports.getusertoken = (req, res, next) => {
+    const tokenid = req.params.tokenid;
+    var userinfo = {};
+    var decodedtoken = tokenid.split('RX')[1];
+    decodedtoken = (decodedtoken - 8945) / 2;
+    User.findByPk(decodedtoken)
+        .then(user => {
+            userinfo.screen_name = user.name;
+            userinfo.user_id = user.twitterId;
+            userinfo.profile_image_url = user.profilePicture;
 
+            const token = jwt.sign({
+                user: userinfo,
+                record_id: decodedtoken
+            }, 'heyphil123');
+
+            res.json(
+                {
+                    decodedtoken: token,
+                    token: {
+                        user: userinfo,
+                        record_id: decodedtoken
+                    }
+                });
+
+        });
+
+};
