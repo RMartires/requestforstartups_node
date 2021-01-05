@@ -9,7 +9,7 @@
   "// If You want to install mdbreact from our GitLab repository, please replace '4.24.0' with gitURL provided here ->": "git+https://oauth2:<YOUR-TOKEN-GOES-HERE>@git.mdbootstrap.com/mdb/react/re-pro.git",
   "dependencies": {
     "airtable": "^0.8.1",
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "bcrypt": "^3.0.7",
     "bcryptjs": "^2.4.3",
     "cryptr": "^6.0.1",
